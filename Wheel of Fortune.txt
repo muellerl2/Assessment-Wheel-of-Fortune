@@ -1,0 +1,41 @@
+﻿We plan to use this list of options for the wheel, taken from the Wheel of Fortune current wheel
+
+
+[300, 500, 450, 500, 800, “Lose A Turn”, 700, 1000, 650, “Bankrupt”, 900, 500, 350, 600, 500, 400, 550, 800, 300, 700, 900, 500, 5000, 950]
+
+
+Plan: We will track turns by a “turn” variable, which is an int that stores whose turn it currently is. 
+
+
+We go for 3 rounds. We fix each thing 
+
+
+Round 1 or 2
+
+
+Player 1 takes turn. If they win, don’t go to player 2.
+Player 2 takes turn. If they win, don’t go to player 3.
+Player 3 takes turn. If they win, don’t loop.
+
+
+Loop around back to player 1, and continue play.
+
+-you spin the wheel
+-you can always guess a consonant unless it lands on “lose a turn” or “bankrupt” or you choose to only guess the word 
+-you have the option to buy a vowel if you get the consonant right. Pursuant to the actual wheel of fortune rules, you can also buy a vowel at the start of your turn
+-if you get the consonant right, you can then guess the word. If you bought a vowel and got the vowel wrong, your turn ends. 
+
+
+Recycle the hangman code for guessing both consonants and vowels. 
+
+
+Then progress to the next turn. Keep progressing through turns until someone gets the word right
+
+
+If someone gets the word right, increment the rounds
+
+
+If we go to the final round, we find the person with the highest score via a loop that checks each score against the others, saving the highest value. In that case, we will only be paying that person in the final round.
+
+
+Write a separate function for the final round, which is separate from everything else, since it has a dramatically different structure. Keep the character guessing function.
