@@ -7,6 +7,7 @@ currentWord = ""
 round = 1
 bank = [0, 0, 0]
 roundPrize = [1000, 2000, 3000]
+consonantList = []
 roundHint = ["Adjective", "A thing", "A TV show"]
 randWord = ["labyrinthine", "paddleboard", "bachelorette"]
 currentBoard = ["_"] * len(randWord[0])
@@ -48,6 +49,7 @@ def incrementTurn():
         currentTurn = 1
 
 def takeTurn():
+    global consonantList
     global roundFinished
     global vowelList
     done = False
@@ -57,53 +59,76 @@ def takeTurn():
         print("The word is: %s" % currentWord)
         print("The board looks like:")
         printList(currentBoard)
-        initialChoice = int(input("""Player %i, what would you like to do?
-        1. Guess the word
-        2. Guess a consonant
-        3. Buy a vowel
-        Your selection here: """ % currentTurn))
-        if initialChoice == 1:
-            wordChoice = str(input("Please input the word: ")).lower()
-            if wordChoice == currentWord:
-                bank[currentTurn - 1] += roundPrize[round - 1]
-                print("You won this round! Your bank is now $%i" % bank[currentTurn - 1])
-                done = True
-                return True
-            else:
-                print("Sorry, that's not the puzzle. Your turn is over.")
-                done = True
-        elif initialChoice == 2:
-            rolledPrize = spinWheel()
-            print("You rolled %s" % str(rolledPrize))
-            if rolledPrize == "Bankrupt":
-                print("Sorry, your turn is over.")
-                bank[currentTurn - 1] = 0
-                break
-            elif rolledPrize == "Lose a Turn":
-                print("Sorry, your turn is over.")
-                break
-            guess = str(input("Please guess a consonant: ")).lower()
-            if not checkChar(guess):
-                print("Sorry, that's not the consonant. Your turn is over.")
-                done = True
-            else:
-                print("Nice job, time to go again.")
-                bank[currentTurn - 1] += rolledPrize
-        elif initialChoice == 3:
-            if bank[currentTurn - 1] >= 250:
-                print("Please input a vowel from the following list:")
-                printVowels(vowelList)
-                vowelInput = str(input("Your vowel choice here: ")).lower()
-                vowelList.remove(vowelInput.upper())
-                bank[currentTurn - 1] = bank[currentTurn - 1] - 250
-                inWord = checkChar(vowelInput)
-                if inWord:
-                    print("Nice job, time to go again.")
+        invalidInput = True
+        while invalidInput:
+            try:
+                initialChoice = int(input("""Player %i, what would you like to do?
+                1. Guess the word
+                2. Guess a consonant
+                3. Buy a vowel
+                Your selection here: """ % currentTurn))
+                if initialChoice in [1, 2, 3]:
+                    invalidInput = False
+                    if initialChoice == 1:
+                        wordChoice = str(input("Please input the word: ")).lower()
+                        if wordChoice == currentWord:
+                            bank[currentTurn - 1] += roundPrize[round - 1]
+                            print("You won this round! Your bank is now $%i" % bank[currentTurn - 1])
+                            done = True
+                            return True
+                        else:
+                            print("Sorry, that's not the puzzle. Your turn is over.")
+                            done = True
+                    elif initialChoice == 2:
+                        rolledPrize = spinWheel()
+                        print("You rolled %s" % str(rolledPrize))
+                        if rolledPrize == "Bankrupt":
+                            print("Sorry, your turn is over.")
+                            bank[currentTurn - 1] = 0
+                            break
+                        elif rolledPrize == "Lose a Turn":
+                            print("Sorry, your turn is over.")
+                            break
+                        notConsonant = True
+                        while notConsonant:
+                            guess = str(input("Please guess a consonant: ")).lower()
+                            if guess in consonantList:
+                                notConsonant = False
+                                consonantList.remove(guess)
+                                if not checkChar(guess):
+                                    print("Sorry, that's not the consonant. Your turn is over.")
+                                    done = True
+                                else:
+                                    print("Nice job, time to go again.")
+                                    bank[currentTurn - 1] += rolledPrize
+                            else:
+                                print("That's not a consonant that hasn't been guessed!")
+                    elif initialChoice == 3:
+                        if bank[currentTurn - 1] >= 250:
+                            vowelNot = True
+                            while vowelNot:
+                                print("Please input a vowel from the following list:")
+                                printVowels(vowelList)
+                                vowelInput = str(input("Your vowel choice here: ")).lower()
+                                if vowelInput.upper() in vowelList:
+                                    vowelNot = False
+                                    vowelList.remove(vowelInput.upper())
+                                    bank[currentTurn - 1] = bank[currentTurn - 1] - 250
+                                    inWord = checkChar(vowelInput)
+                                    if inWord:
+                                        print("Nice job, time to go again.")
+                                    else:
+                                        print("Sorry, that vowel isn't in the word. Your turn is over.")
+                                        done = True
+                                else:
+                                    print("That character isn't a vowel in the list provided!")
+                        else:
+                            print("Sorry, you only have $%i, you can't buy a vowel, pick another option."
+                                  % bank[currentTurn - 1])
                 else:
-                    print("Sorry, that vowel isn't in the word. Your turn is over.")
-                    done = True
-            else:
-                print("Sorry, you only have $%i, you can't buy a vowel, pick another option." % bank[currentTurn - 1])
+                    print("Please input 1, 2, or 3!")
+            except ValueError:
+                print("That's not a number!")
 
 # We use this function to display the current board in a readable fashion
 def printList(wordList):
@@ -121,10 +146,14 @@ def printVowels(wordList):
 # This function is run to reinitialize the list of vowels after each round
 def beginRound():
     global vowelList
+    global consonantList
     global currentWord
     print("It is round %i!" % round)
     currentWord = randWord[round - 1]
     vowelList = ["A", "E", "I", "O", "U"]
+    consonantList = ["b", "c", "d", "f", "g", "h", "j",
+                 "k", "l", "m", "n", "p", "q", "r",
+                 "s", "t", "v", "w", "x", "y", "z"]
     initializeBoard()
 
 # This function loops through each player's turn until someone wins
@@ -150,6 +179,7 @@ def getMax():
 def finalRound():
     global currentWord
     global currentBoard
+    global consonantList
     finalPlayer = getMax() + 1
     print("""Congratulations, player %i! 
     You have advanced to the final round! You will be given a word where R, S, T, L, N, E are filled in. You
@@ -159,18 +189,55 @@ def finalRound():
     print(currentWord)
     currentBoard = ["_"] * len(currentWord)
     #We substitute in the characters that are automatically given
+    consonantList = ["b", "c", "d", "f", "g", "h", "j",
+                     "k", "l", "m", "n", "p", "q", "r",
+                     "s", "t", "v", "w", "x", "y", "z"]
+    vowelList = ["A", "E", "I", "O", "U"]
     checkChar("e")
+    vowelList.remove("E")
     checkChar("s")
+    consonantList.remove("s")
     checkChar("t")
+    consonantList.remove("t")
     checkChar("l")
+    consonantList.remove("l")
     checkChar("n")
+    consonantList.remove("n")
     checkChar("r")
+    consonantList.remove("r")
     printList(currentBoard)
     #We ask the user to input their desired expressions
-    cons1 = str(input("Select your first consonant."))
-    cons2 = str(input("Select your second consonant."))
-    cons3 = str(input("Select your third consonant."))
-    vowel1 = str(input("Select your vowel."))
+    notConsonant1 = True
+    while notConsonant1:
+        cons1 = str(input("Select your first consonant."))
+        if cons1 in consonantList:
+            notConsonant1 = False
+            consonantList.remove(cons1)
+        else:
+            print("Sorry, that's not a consonant that hasn't been selected!")
+    notConsonant2 = True
+    while notConsonant2:
+        cons2 = str(input("Select your second consonant."))
+        if cons2 in consonantList:
+            notConsonant2 = False
+            consonantList.remove(cons2)
+        else:
+            print("Sorry, that's not a consonant that hasn't been selected!")
+    notConsonant3 = True
+    while notConsonant3:
+        cons3 = str(input("Select your third consonant."))
+        if cons3 in consonantList:
+            notConsonant3 = False
+            consonantList.remove(cons3)
+        else:
+            print("Sorry, that's not a consonant that hasn't been selected!")
+    notVowel = True
+    while notVowel:
+        vowel1 = str(input("Select your vowel"))
+        if vowel1.upper() in vowelList:
+            notVowel = False
+        else:
+            print("Sorry, that's not a vowel that hasn't been selected!")
 
     checkChar(cons1)
     checkChar(cons2)
